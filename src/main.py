@@ -2,19 +2,21 @@ import numpy as np
 import heapq as hq
 import time
 
+# Class untuk menyimpan tiap simpul
 class Node:
-    def __init__(self, level, cost, matrix, emptyTile, parent):
+    def __init__(self, level, cost, buffer, emptyTile, parent):
         self.cost = cost
         self.level = level
-        self.matrix = matrix
+        self.buffer = buffer
         self.emptyTile = emptyTile
         self.parent = parent
 
     def __lt__(self, other):
         return self.cost <= other.cost
 
-def changeToZero(matrix):
-    matrixZero = matrix.copy()
+# Fungsi pengubahan hasil ke bentuk matrix
+def changeToZero(buffer):
+    matrixZero = buffer.copy()
     matrixZero.resize(4,4)
     for r in range(0,4):
         for c in range(0,4):
@@ -22,22 +24,24 @@ def changeToZero(matrix):
                 matrixZero[r,c] = 0
     return matrixZero
 
-def fungsiKurang(matrix):
+# Fungsi pencarian nilai kurang
+def fungsiKurang(buffer):
     kurang = 0;
     for i in range(1,17):
         x = 0;
-        while (matrix[x] != i):
+        while (buffer[x] != i):
             x += 1;
         for j in range(x,16):
-            if matrix[j] < i:
+            if buffer[j] < i:
                 kurang += 1
     for r in range(0,4):
         for c in range(0,4):
-            if matrix[(r*4)+c] == 16:
+            if buffer[(r*4)+c] == 16:
                 if (r + c) % 2 != 0:
                     kurang += 1
     return kurang
 
+# Fungsi menghitung cost dari pergerakan dan cost parent
 def fungsiCost(parentCost, r, c, element, r1, c1):
     if ((r*4) + c + 1 == element):
         return parentCost
@@ -46,19 +50,23 @@ def fungsiCost(parentCost, r, c, element, r1, c1):
     else:
         return parentCost + 1
 
+# Fungsi membuat tuple baru sesuai pergerakan
 def move(parent,r,c,r2,c2):
-    tempMatrix = list(parent.matrix)
+    tempMatrix = list(parent.buffer)
     tempMatrix[(r*4)+c] = tempMatrix[(r2*4)+c2]
     tempMatrix[(r2*4)+c2] = 16
     return tuple(tempMatrix)
 
+# Fungsi utama pencarian solusi
 def cariKemungkinan(prioQueue, visited):
     nodes = 1
     while (True):
+        # Node parent untuk dicari kemungkinan geraknya
         parent = hq.heappop(prioQueue)
-        visited.add(parent.matrix)
+        visited.add(parent.buffer)
         r = parent.emptyTile[0]
         c = parent.emptyTile[1]
+        # Kemungkinan gerak ke atas
         if (r != 0):
             tempMatrix = move(parent,r,c,r-1,c)
             if (tempMatrix not in visited):
@@ -69,6 +77,7 @@ def cariKemungkinan(prioQueue, visited):
                 visited.add(tempMatrix)
                 if (cost == parent.level+1):
                     return [tempNode, nodes]
+        # Kemungkinan gerak ke kiri
         if (c != 0):
             tempMatrix = move(parent,r,c,r,c-1)
             if (tempMatrix not in visited):
@@ -79,6 +88,7 @@ def cariKemungkinan(prioQueue, visited):
                 visited.add(tempMatrix)
                 if (cost == parent.level+1):
                     return [tempNode, nodes]
+        # Kemungkinan gerak ke kanan
         if (c != 3):
             tempMatrix = move(parent,r,c,r,c+1)
             if (tempMatrix not in visited):
@@ -89,6 +99,7 @@ def cariKemungkinan(prioQueue, visited):
                 visited.add(tempMatrix)
                 if (cost == parent.level+1):
                     return [tempNode, nodes]
+        # Kemungkinan gerak ke kanan
         if (r != 3):
             tempMatrix = move(parent,r,c,r+1,c)
             if (tempMatrix not in visited):
@@ -100,63 +111,75 @@ def cariKemungkinan(prioQueue, visited):
                 if (cost == parent.level+1):
                     return [tempNode, nodes]
 
+# Fungsi pembacaan file pada folder ../test/
+def readFile(filename):
+    tempList = list([])
+    try:
+        with open("../test/" + filename) as f:
+            content = f.readlines()
+    except:
+        print("File tidak ditemukan")
+        exit()
+    for x in content:
+        i = 0
+        while (i < len(x)) and (x[i] != '\n'):
+            if (x[i] != ' ') and (x[i+1] == ' '):
+                tempList.append(int(x[i]))
+                i += 1
+            elif (x[i] != ' ') and (x[i+1] != ' '):
+                tempList.append(int(x[i:i+2]))
+                i += 2
+            else:
+                i += 1
+    return tuple(tempList)
+
 
 if __name__ == "__main__":
+    # Deklarasi variabel
     prioQueue = []
     visited  = set()
+    puzzle = tuple([])
     cost = 0
     r = 0
     c = 0
 
-    test = tuple([])
-    matrix1 = tuple([1,2,3,4,5,6,16,8,9,10,7,11,13,14,15,12])
-    matrix2 = tuple([1,2,5,4,3,6,16,7,9,10,8,11,13,14,15,12])
-    matrix3 = tuple([1,2,3,4,5,7,10,8,11,9,6,16,13,14,15,12])
-    matrix4 = tuple([3,1,5,6,7,8,10,9,11,4,2,16,13,15,14,12])
-    matrix5 = tuple([1,3,5,7,9,11,13,15,16,2,4,6,8,10,12,14])
-
-    input = input("Masukkan nomor matrix: ")
-    if input == "1":
-        test = matrix1
-    elif input == "2":
-        test = matrix2
-    elif input == "3":
-        test = matrix3
-    elif input == "4":
-        test = matrix4
-    elif input == "5":
-        test = matrix5
-    else:
-        print("Input salah")
-        exit()
+    # Membaca file input
+    input = input("Masukkan nama file: ")
+    puzzle = readFile(input)
 
     tAwal = time.time()
+
+    # Mencari posisi emptyTile
     for i in range(0,16):
-        if test[i] == 16:
+        if puzzle[i] == 16:
             r = i // 4
             c = i % 4
             break
-
+    
+    # Mencari cost awal
     for i in range(0,16):
-        if test[i] != 16 and test[i] != i+1:
+        if puzzle[i] != 16 and puzzle[i] != i+1:
             cost += 1
 
-    if fungsiKurang(test) % 2 == 0:
-        hq.heappush(prioQueue,(Node(0, cost, test, [r,c], None)))
+    # Pencarian solusi
+    if fungsiKurang(puzzle) % 2 == 0:
+        hq.heappush(prioQueue,(Node(0, cost, puzzle, [r,c], None)))
         end = cariKemungkinan(prioQueue, visited)
         tAkhir = time.time()
+
+        # Menampilkan hasil dan informasinya
         pathway = []
         paths = end[0].level
         print("Jalur terpendek pada puzzle ini adalah:")
         while (end[0] != None):
-            pathway.append(changeToZero(np.matrix(end[0].matrix)))
+            pathway.append(changeToZero(np.matrix(end[0].buffer)))
             end[0] = end[0].parent
         for i in range(len(pathway)-1, -1, -1):
             print(pathway[i], "\n")
-        print("Nilai kurang:", fungsiKurang(test))
-        print("Jumlah jalur terpendek:", paths)
+        print("Nilai kurang:", fungsiKurang(puzzle))
+        print("Jumlah pergerakan terpendek:", paths)
         print("Waktu:", tAkhir - tAwal, "detik")
         print("Simpul:", end[1])
     else:
-        print("Nilai kurang:", fungsiKurang(test))
+        print("Nilai kurang:", fungsiKurang(puzzle))
         print("Cannot be solved")
