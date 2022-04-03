@@ -5,11 +5,11 @@ import time
 # Class untuk menyimpan tiap simpul
 class Node:
     def __init__(self, level, cost, buffer, emptyTile, parent):
-        self.cost = cost
-        self.level = level
-        self.buffer = buffer
-        self.emptyTile = emptyTile
-        self.parent = parent
+        self.cost = cost                # nilai cost
+        self.level = level              # level simpul
+        self.buffer = buffer            # buffer puzzle simpul
+        self.emptyTile = emptyTile      # posisi kosong
+        self.parent = parent            # simpul/node parent
 
     def __lt__(self, other):
         return self.cost <= other.cost
@@ -99,7 +99,7 @@ def cariKemungkinan(prioQueue, visited):
                 visited.add(tempMatrix)
                 if (cost == parent.level+1):
                     return [tempNode, nodes]
-        # Kemungkinan gerak ke kanan
+        # Kemungkinan gerak ke bawah
         if (r != 3):
             tempMatrix = move(parent,r,c,r+1,c)
             if (tempMatrix not in visited):
@@ -111,7 +111,7 @@ def cariKemungkinan(prioQueue, visited):
                 if (cost == parent.level+1):
                     return [tempNode, nodes]
 
-# Fungsi pembacaan file pada folder ../test/
+# Fungsi pembacaan file pada folder ../test
 def readFile(filename):
     tempList = list([])
     try:
