@@ -31,14 +31,18 @@ def fungsiKurang(buffer):
         x = 0;
         while (buffer[x] != i):
             x += 1;
+        kuranglokal = 0
         for j in range(x,16):
             if buffer[j] < i:
-                kurang += 1
+                kuranglokal += 1
+        print("Nilai kurang", i, ": ", kuranglokal)
+        kurang += kuranglokal
     for r in range(0,4):
         for c in range(0,4):
             if buffer[(r*4)+c] == 16:
                 if (r + c) % 2 != 0:
                     kurang += 1
+    print("\n")
     return kurang
 
 # Fungsi menghitung cost dari pergerakan dan cost parent
@@ -161,8 +165,10 @@ if __name__ == "__main__":
         if puzzle[i] != 16 and puzzle[i] != i+1:
             cost += 1
 
+    # Fungsi kurang
+    fungsiKurang = fungsiKurang(puzzle)
     # Pencarian solusi
-    if fungsiKurang(puzzle) % 2 == 0:
+    if fungsiKurang % 2 == 0:
         hq.heappush(prioQueue,(Node(0, cost, puzzle, [r,c], None)))
         end = cariKemungkinan(prioQueue, visited)
         tAkhir = time.time()
@@ -176,10 +182,10 @@ if __name__ == "__main__":
             end[0] = end[0].parent
         for i in range(len(pathway)-1, -1, -1):
             print(pathway[i], "\n")
-        print("Nilai kurang:", fungsiKurang(puzzle))
+        print("Nilai kurang:", fungsiKurang)
         print("Jumlah pergerakan terpendek:", paths)
         print("Waktu:", tAkhir - tAwal, "detik")
         print("Simpul:", end[1])
     else:
-        print("Nilai kurang:", fungsiKurang(puzzle))
+        print("Nilai kurang:", fungsiKurang)
         print("Cannot be solved")
